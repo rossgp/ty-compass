@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧭 TY Compass</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    /* Accessible palette — WCAG AA compliant, colourblind-safe */
+    --bg: #f4f6f7;
+    --surface: #ffffff;
+    --text: #1f2933;        /* charcoal, not pure black */
+    --text-soft: #52606d;
+    --muted: #7b8794;
+    --primary: #2a6f7f;     /* slate teal */
+    --primary-dark: #1d5260;
+    --primary-light: #e3eef0;
+    --accent: #c2703d;      /* warm terracotta accent */
+    --border: #d9e0e3;
+    --focus: #2a6f7f;
+    --radius: 14px;
+    --shadow: 0 2px 20px rgba(31,41,51,0.07);
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+    font-size: 17px;
+  }
+
+  .app { max-width: 540px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+
+  .header { background: var(--primary); color: white; text-align: center; padding: 30px 22px 26px; }
+  .header .emoji { font-size: 2.6rem; display: block; margin-bottom: 8px; }
+  .header h1 { font-family: 'Fraunces', serif; font-size: 1.7rem; font-weight: 600; letter-spacing: 0.01em; }
+  .header p { font-size: 0.9rem; opacity: 0.9; margin-top: 6px; font-weight: 400; }
+
+  .progress { background: rgba(255,255,255,0.25); height: 5px; }
+  .progress-bar { background: white; height: 5px; transition: width 0.4s ease; width: 20%; }
+
+  .step-label { text-align: center; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 16px 22px 0; }
+
+  .screen { display: none; flex: 1; padding: 20px 22px 36px; animation: fadeIn 0.35s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  h2.section-title { font-family: 'Fraunces', serif; font-size: 1.45rem; font-weight: 600; color: var(--text); margin-bottom: 8px; line-height: 1.25; }
+  .section-intro { font-size: 0.97rem; color: var(--text-soft); margin-bottom: 22px; line-height: 1.6; }
+
+  .welcome-text { font-size: 1.02rem; color: var(--text-soft); line-height: 1.7; margin-bottom: 18px; }
+  .welcome-text strong { color: var(--text); font-weight: 600; }
+
+  .loc-row { display: flex; gap: 10px; }
+  .loc-btn { flex: 1; background: var(--surface); border: 2px solid var(--border); border-radius: 10px; padding: 14px 12px; cursor: pointer; text-align: left; transition: all 0.15s; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; gap: 3px; }
+  .loc-btn:hover { border-color: var(--primary); }
+  .loc-btn.selected { border-color: var(--primary); background: var(--primary-light); }
+  .loc-btn .loc-title { font-weight: 600; font-size: 0.95rem; color: var(--text); }
+  .loc-btn .loc-sub { font-size: 0.8rem; color: var(--muted); }
+
+  .disclaimer-box { background: var(--primary-light); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 22px; font-size: 0.88rem; color: var(--text-soft); line-height: 1.6; }
+
+  .form-group { margin-bottom: 20px; }
+  label { display: block; font-size: 0.9rem; font-weight: 600; color: var(--text); margin-bottom: 7px; }
+  .label-hint { font-weight: 400; color: var(--muted); font-size: 0.85rem; }
+  input[type="text"], input[type="email"] {
+    width: 100%; background: var(--surface); border: 2px solid var(--border); border-radius: 10px;
+    padding: 13px 15px; font-family: 'Inter', sans-serif; font-size: 1rem; color: var(--text);
+    outline: none; transition: border-color 0.2s;
+  }
+  input:focus { border-color: var(--focus); box-shadow: 0 0 0 3px rgba(42,111,127,0.15); }
+
+  .btn { width: 100%; padding: 16px; border: none; border-radius: var(--radius); font-family: 'Inter', sans-serif; font-size: 1.02rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-primary:active { transform: scale(0.99); }
+  .btn-primary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .btn-secondary { background: var(--surface); color: var(--primary); border: 2px solid var(--border); margin-top: 10px; }
+  .btn-secondary:hover { border-color: var(--primary); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .question-block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 18px; margin-bottom: 16px; box-shadow: var(--shadow); }
+  .q-number { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary); margin-bottom: 8px; }
+  .q-text { font-family: 'Fraunces', serif; font-size: 1.12rem; font-weight: 600; color: var(--text); margin-bottom: 16px; line-height: 1.4; }
+
+  .mc-options { display: flex; flex-direction: column; gap: 9px; }
+  .mc-option {
+    background: var(--surface); border: 2px solid var(--border); border-radius: 10px;
+    padding: 13px 16px; font-family: 'Inter', sans-serif; font-size: 0.97rem;
+    color: var(--text); cursor: pointer; text-align: left; transition: all 0.15s; width: 100%;
+    display: flex; align-items: center; gap: 11px;
+  }
+  .mc-option:hover { border-color: var(--primary); background: var(--primary-light); }
+  .mc-option:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+  .mc-option.selected { border-color: var(--primary); background: var(--primary-light); font-weight: 600; }
+  .mc-option .check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: white; }
+  .mc-option.selected .check { background: var(--primary); border-color: var(--primary); }
+  .multi-hint { font-size: 0.82rem; color: var(--muted); margin-bottom: 14px; font-style: italic; }
+
+  .branch-slot { margin: 4px 0 6px; }
+  .branch-inner { background: var(--primary-light); border-radius: 10px; padding: 14px 14px 4px; margin: 2px 0 8px; border-left: 3px solid var(--primary); }
+  .branch-q { font-size: 0.92rem; font-weight: 600; color: var(--primary-dark); margin-bottom: 10px; }
+
+  .direction.unexpected { border-left-color: var(--accent); background: #fbf2ec; }
+  .unexpected-tag { font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); margin-bottom: 8px; }
+
+  .loading { text-align: center; padding: 50px 20px; }
+  .compass-spinner { font-size: 3.2rem; display: block; animation: spin 3s ease-in-out infinite; margin-bottom: 18px; }
+  @keyframes spin { 0% { transform: rotate(-15deg); } 50% { transform: rotate(15deg); } 100% { transform: rotate(-15deg); } }
+  .loading p { font-family: 'Fraunces', serif; font-style: italic; color: var(--text-soft); font-size: 1.05rem; line-height: 1.6; }
+
+  .error-box { background: #fbeae5; border: 1.5px solid #e0a08a; border-radius: var(--radius); padding: 20px; text-align: center; margin-bottom: 16px; }
+  .error-box p { color: #9a3412; font-size: 0.95rem; line-height: 1.6; margin-bottom: 14px; }
+
+  .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
+  .result-greeting { font-family: 'Fraunces', serif; font-size: 1.4rem; font-weight: 600; color: var(--text); margin-bottom: 14px; }
+  .result-intro { font-size: 0.97rem; color: var(--text-soft); line-height: 1.65; margin-bottom: 4px; }
+
+  .result-section { margin-bottom: 24px; }
+  .result-section h3 { font-family: 'Fraunces', serif; font-size: 1.15rem; font-weight: 600; color: var(--primary-dark); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--primary-light); }
+  .result-section p { font-size: 0.96rem; line-height: 1.65; color: var(--text); margin-bottom: 10px; }
+
+  .direction { background: var(--bg); border-radius: 10px; padding: 16px 16px; margin-bottom: 14px; border-left: 4px solid var(--primary); }
+  .direction h4 { font-family: 'Fraunces', serif; font-size: 1.08rem; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+  .direction .label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--accent); margin: 10px 0 3px; }
+  .direction p { font-size: 0.92rem; line-height: 1.6; color: var(--text-soft); margin-bottom: 4px; }
+
+  .where-item { margin-bottom: 16px; }
+  .where-item h4 { font-size: 0.98rem; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+  .where-item p { font-size: 0.9rem; color: var(--text-soft); line-height: 1.6; margin-bottom: 5px; }
+  .where-item a { color: var(--primary); font-weight: 500; word-break: break-word; }
+
+  .counsellor-note { background: var(--primary-light); border-radius: var(--radius); padding: 18px; font-size: 0.93rem; color: var(--text); line-height: 1.65; font-style: italic; }
+
+  .action-row { display: flex; flex-direction: column; gap: 10px; margin: 20px 0 8px; }
+
+  .result-disclaimer { font-size: 0.82rem; color: var(--muted); line-height: 1.6; text-align: center; padding: 16px 10px; font-style: italic; }
+
+  .footer-note { text-align: center; font-size: 0.82rem; color: var(--muted); padding: 18px 22px; border-top: 1px solid var(--border); }
+  .footer-note .built { font-style: italic; margin-top: 4px; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: white; padding: 13px 24px; border-radius: 24px; font-size: 0.92rem; font-weight: 500; transition: transform 0.3s ease; z-index: 999; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  @media print {
+    .header, .progress, .step-label, .action-row, .footer-note, .btn { display: none !important; }
+    .result-card { box-shadow: none; border: 1px solid #ccc; }
+    body { background: white; font-size: 12pt; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <span class="emoji">🧭</span>
+    <h1>TY Compass</h1>
+    <p>Find a direction worth exploring</p>
+  </div>
+  <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+  <div class="step-label" id="stepLabel">Welcome</div>
+
+  <!-- SCREEN 1: WELCOME -->
+  <div class="screen active" id="screen1">
+    <p class="welcome-text">
+      <strong>TY Compass was created by a parent</strong> who remembered how hard it was to figure out what to do for work experience — and wanted to make that a little easier for every TY student.
+    </p>
+    <p class="welcome-text">
+      In TY you need to line up two separate weeks of work experience — and the hardest part is often just knowing where to start. TY Compass asks you a few questions about what you enjoy and how you like to work, then suggests the kinds of places that might be worth approaching.
+    </p>
+    <p class="welcome-text">
+      It won't pick a career for you — it just points you toward places that might suit you, so you've got somewhere to start. There are no right or wrong answers, and it takes about 5 minutes. 🧭
+    </p>
+    <div class="form-group">
+      <label for="name">Your first name</label>
+      <input type="text" id="name" placeholder="e.g. Aoife" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label for="email">Email address <span class="label-hint">— optional, so you can send the results to yourself</span></label>
+      <input type="email" id="email" placeholder="e.g. aoife@example.com" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label>Where will you be looking for work experience?</label>
+      <div class="loc-row">
+        <button id="locCork" class="loc-btn selected" onclick="setLocation('cork')">
+          <span class="loc-title">Cork</span>
+          <span class="loc-sub">Local places & resources</span>
+        </button>
+        <button id="locElsewhere" class="loc-btn" onclick="setLocation('elsewhere')">
+          <span class="loc-title">Elsewhere in Ireland</span>
+          <span class="loc-sub">General suggestions</span>
+        </button>
+      </div>
+    </div>
+    <div class="disclaimer-box">
+      TY Compass uses AI to spot patterns in your answers — things you enjoy, how you like to work, what matters to you — and suggests the kinds of places that might be worth approaching for work experience. It is not a career test and it does not predict your future. Use it as a starting point, and chat to your guidance counsellor or a trusted adult too.
+    </div>
+    <button class="btn btn-primary" onclick="goToScreen(2)">Let's begin →</button>
+  </div>
+
+  <!-- SCREEN 2: SUBJECTS & SKILLS -->
+  <div class="screen" id="screen2">
+    <h2 class="section-title">What do you enjoy?</h2>
+    <p class="section-intro">Think about what you genuinely like — not what you're told you're good at, or what gets the best marks. What do you actually enjoy spending time on?</p>
+    <div id="section2Questions"></div>
+    <button class="btn btn-primary" id="s2next" onclick="goToScreen(3)" disabled>Next →</button>
+    <button class="btn btn-secondary" onclick="goToScreen(1)">← Back</button>
+  </div>
+
+  <!-- SCREEN 3: WORK STYLE -->
+  <div class="screen" id="screen3">
+    <h2 class="section-title">How do you like to work?</h2>
+    <p class="section-intro">There's no better or worse here — everyone's different. Just pick what feels most like you.</p>
+    <div id="section3Questions"></div>
+    <button class="btn btn-primary" id="s3next" onclick="goToScreen(4)" disabled>Next →</button>
+    <button class="btn btn-secondary" onclick="goToScreen(2)">← Back</button>
+  </div>
+
+  <!-- SCREEN 4: VALUES & INTERESTS -->
+  <div class="screen" id="screen4">
+    <h2 class="section-title">What matters to you?</h2>
+    <p class="section-intro">A few last questions about what you care about and what you enjoy outside school.</p>
+    <div id="section4Questions"></div>
+    <button class="btn btn-primary" id="s4next" onclick="generateCompass()" disabled>See my compass 🧭</button>
+    <button class="btn btn-secondary" onclick="goToScreen(3)">← Back</button>
+  </div>
+
+  <!-- SCREEN 5: RESULTS -->
+  <div class="screen" id="screen5">
+    <div id="loadingState" class="loading">
+      <span class="compass-spinner">🧭</span>
+      <p>Reading your answers...<br>Finding directions worth exploring...</p>
+    </div>
+    <div id="errorState" style="display:none;">
+      <div class="error-box">
+        <p id="errorMessage">Something went wrong reaching the compass. This can happen with a weak connection.</p>
+        <button class="btn btn-primary" onclick="generateCompass()">Try again</button>
+      </div>
+      <button class="btn btn-secondary" onclick="goToScreen(4)">← Back to questions</button>
+    </div>
+    <div id="resultState" style="display:none;">
+      <div class="result-card" id="resultCard"></div>
+      <div class="action-row">
+        <button class="btn btn-primary" id="emailBtn" onclick="copyResults()">📋 Copy my results</button>
+        <button class="btn btn-secondary" onclick="window.print()">🖨️ Print or save as PDF</button>
+        <button class="btn btn-secondary" onclick="startAgain()">🔄 Start again</button>
+      </div>
+      <p class="result-disclaimer">
+        This is an AI-generated starting point for exploration — not a career test, and not a prediction of your future. Please talk these ideas through with your guidance counsellor or a trusted adult before making decisions.
+      </p>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    TY Compass 🧭 — a starting point, not a verdict
+    <div class="built">Built with care by a parent who wanted to help.</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+
+// ── QUESTIONS WITH BRANCHING ─────────────────────────────────────────────────
+// Each question can have options; an option may carry a `branch` — a follow-up
+// question revealed inline when that option is chosen.
+
+const SECTIONS = {
+  enjoy: {
+    title: "What do you enjoy?",
+    intro: "Think about what you genuinely like — not what you're told you're good at, or what gets the best marks. Pick what feels true.",
+    questions: [
+      {
+        id: 'enjoy_main', multi: true, max: 3,
+        q: "Which of these would you most enjoy spending time on? (pick up to 3)",
+        options: [
+          { val: "Working with people 👥", branch: {
+            id: 'enjoy_people_who', multi: true, max: 2,
+            q: "Who would you most like to work with? (pick up to 2)",
+            options: ["Young children 🧒", "Teenagers my own age 🧑", "Older or elderly people 👵", "People who need extra help ♿", "Customers or the public 🛍️", "Anyone, I just like people 😊"]
+          }},
+          { val: "Making or building things 🔨", branch: {
+            id: 'enjoy_make_what', multi: true, max: 2,
+            q: "What kind of making appeals most? (pick up to 2)",
+            options: ["With my hands, physically 🔧", "On a computer 💻", "Artistic or design pieces 🎨", "Food or baking 🍳", "Big things — structures, machines 🏗️"]
+          }},
+          { val: "Figuring out how things work 🔍", branch: {
+            id: 'enjoy_figure_what', multi: true, max: 2,
+            q: "What kind of things? (pick up to 2)",
+            options: ["Machines & technology ⚙️", "The human body & health 🫀", "Nature & the environment 🌿", "Money & how business works 💶", "Computers & code 💻"]
+          }},
+          { val: "Being creative 🎨", branch: {
+            id: 'enjoy_creative_how', multi: true, max: 2,
+            q: "What kind of creative? (pick up to 2)",
+            options: ["Visual art & design 🖌️", "Writing & storytelling ✍️", "Music & performance 🎵", "Video, photography & content 📱", "Fashion & style 👗"]
+          }},
+          { val: "Being active or outdoors 🏃", branch: {
+            id: 'enjoy_active_how', multi: true, max: 2,
+            q: "What kind of active? (pick up to 2)",
+            options: ["Sport & fitness ⚽", "Working with animals 🐾", "Nature & conservation 🌲", "Hands-on trades & building 🛠️", "On the move, different places 🚐"]
+          }},
+          { val: "Solving problems 🧩", branch: {
+            id: 'enjoy_solve_what', multi: true, max: 2,
+            q: "What kind of problems do you like? (pick up to 2)",
+            options: ["Logical & technical 🔢", "Helping-people problems ❤️", "Creative challenges 💡", "Practical, hands-on fixes 🔧", "Business & money puzzles 📊"]
+          }},
+          { val: "Organising & planning 📋", branch: {
+            id: 'enjoy_organise_what', multi: false,
+            q: "What do you most like to organise?",
+            options: ["Events & people 🎉", "Information & systems 🗂️", "Projects & tasks ✅", "Spaces & how things look 🏠"]
+          }},
+        ]
+      },
+    ]
+  },
+  workstyle: {
+    title: "How do you like to work?",
+    intro: "There's no better or worse here — everyone's different. Just pick what feels most like you.",
+    questions: [
+      { id: 'work_people', multi: false,
+        q: "Would you rather...",
+        options: [
+          { val: "Work closely with others 👥" },
+          { val: "Work mostly on my own 🧘" },
+          { val: "A mix of both 🔄" }
+        ]},
+      { id: 'work_env', multi: false,
+        q: "Where would you rather spend your day?",
+        options: [
+          { val: "At a desk, focused 🖥️" },
+          { val: "Up and moving around 🚶" },
+          { val: "Outdoors 🌳" },
+          { val: "Different places each day 🚗" }
+        ]},
+      { id: 'work_pace', multi: false,
+        q: "Which sounds better?",
+        options: [
+          { val: "Calm and steady, time to focus 🧘" },
+          { val: "Busy and fast, lots happening ⚡" },
+          { val: "Depends on the day 🔄" }
+        ]},
+      { id: 'work_role', multi: false,
+        q: "In a group, you're usually the one who...",
+        options: [
+          { val: "Leads and organises 🧭" },
+          { val: "Comes up with ideas 💡" },
+          { val: "Gets the work done 🛠️" },
+          { val: "Keeps everyone together 🤝" },
+          { val: "Quietly does my own part 🧩" }
+        ]},
+    ]
+  },
+  matters: {
+    title: "What matters to you?",
+    intro: "A few last questions about what you care about and what feels rewarding.",
+    questions: [
+      { id: 'matt_impact', multi: false,
+        q: "What would feel most satisfying at the end of a day?",
+        options: [
+          { val: "I helped someone ❤️" },
+          { val: "I made or fixed something real 🔨" },
+          { val: "I cracked something difficult 🧠" },
+          { val: "I created something people enjoy 🎨" },
+          { val: "I kept things running smoothly ⚙️" }
+        ]},
+      { id: 'matt_motiv', multi: false,
+        q: "Which matters more to you right now?",
+        options: [
+          { val: "Doing something that helps others 🌍" },
+          { val: "Learning a real skill 🛠️" },
+          { val: "Seeing how an industry works 🏢" },
+          { val: "Trying something totally new 🚀" }
+        ]},
+      { id: 'matt_open', multi: false,
+        q: "How adventurous are you feeling about your work experience?",
+        options: [
+          { val: "Keep it familiar — something I already know I'd like 🏠" },
+          { val: "A bit of a stretch — related but new 🌱" },
+          { val: "Surprise me — I'm open to anything 🚀" }
+        ]},
+    ]
+  }
+};
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let answers = {};
+let selectedLocation = 'cork';
+
+function setLocation(loc) {
+  selectedLocation = loc;
+  document.getElementById('locCork').className = loc === 'cork' ? 'loc-btn selected' : 'loc-btn';
+  document.getElementById('locElsewhere').className = loc === 'elsewhere' ? 'loc-btn selected' : 'loc-btn';
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function renderSection(sectionKey, containerId, nextBtnId) {
+  const container = document.getElementById(containerId);
+  const section = SECTIONS[sectionKey];
+  container.innerHTML = section.questions.map((q, i) =>
+    renderQuestionBlock(q, i + 1, section.questions.length)
+  ).join('');
+  restoreSelections(container);
+  checkAllSections();
+}
+
+function renderQuestionBlock(q, num, total) {
+  return `
+    <div class="question-block" data-qblock="${q.id}">
+      <div class="q-number">Question ${num} of ${total}</div>
+      <div class="q-text">${q.q}</div>
+      ${q.multi ? `<p class="multi-hint">You can pick more than one</p>` : ''}
+      <div class="mc-options">
+        ${q.options.map(opt => renderOption(q, opt)).join('')}
+      </div>
+    </div>`;
+}
+
+function renderOption(q, opt) {
+  const val = typeof opt === 'string' ? opt : opt.val;
+  const hasBranch = typeof opt === 'object' && opt.branch;
+  return `
+    <button class="mc-option" data-qid="${q.id}" data-val="${escapeAttr(val)}"
+            onclick="pickOption(this, ${q.multi}, ${q.max || 1})">
+      <span class="check"></span>
+      <span>${val}</span>
+    </button>
+    ${hasBranch ? `<div class="branch-slot" id="branch-${escapeId(q.id + '-' + val)}" style="display:none;"></div>` : ''}`;
+}
+
+function escapeAttr(s) { return s.replace(/"/g, '&quot;'); }
+function escapeId(s) { return s.replace(/[^a-zA-Z0-9]/g, '_'); }
+
+// ── PICK ─────────────────────────────────────────────────────────────────────
+function pickOption(btn, isMulti, max) {
+  const qid = btn.dataset.qid;
+  const val = btn.dataset.val;
+
+  if (isMulti) {
+    if (!answers[qid]) answers[qid] = [];
+    const idx = answers[qid].indexOf(val);
+    if (idx >= 0) {
+      answers[qid].splice(idx, 1);
+      btn.classList.remove('selected');
+      btn.querySelector('.check').textContent = '';
+      collapseBranch(qid, val);
+    } else {
+      if (answers[qid].length >= max) { showToast(`Pick up to ${max}`); return; }
+      answers[qid].push(val);
+      btn.classList.add('selected');
+      btn.querySelector('.check').textContent = '✓';
+      expandBranch(qid, val);
+    }
+  } else {
+    const prev = answers[qid];
+    answers[qid] = val;
+    btn.closest('.mc-options').querySelectorAll('.mc-option').forEach(b => {
+      b.classList.remove('selected');
+      b.querySelector('.check').textContent = '';
+    });
+    btn.classList.add('selected');
+    btn.querySelector('.check').textContent = '✓';
+    // single-select branches: collapse previous, expand new
+    if (prev && prev !== val) collapseBranch(qid, prev);
+    expandBranch(qid, val);
+  }
+  checkAllSections();
+}
+
+function findOption(qid, val) {
+  for (const sec of Object.values(SECTIONS)) {
+    for (const q of sec.questions) {
+      if (q.id === qid) {
+        return q.options.find(o => (typeof o === 'object' ? o.val : o) === val);
+      }
+    }
+  }
+  return null;
+}
+
+function expandBranch(qid, val) {
+  const opt = findOption(qid, val);
+  if (!opt || typeof opt !== 'object' || !opt.branch) return;
+  const slot = document.getElementById('branch-' + escapeId(qid + '-' + val));
+  if (!slot) return;
+  const b = opt.branch;
+  slot.innerHTML = `
+    <div class="branch-inner">
+      <div class="branch-q">${b.q}</div>
+      ${b.multi ? `<p class="multi-hint">You can pick more than one</p>` : ''}
+      <div class="mc-options">
+        ${b.options.map(o => {
+          const ov = typeof o === 'string' ? o : o.val;
+          return `<button class="mc-option" data-qid="${b.id}" data-val="${escapeAttr(ov)}"
+                    onclick="pickOption(this, ${b.multi}, ${b.max || 1})">
+                    <span class="check"></span><span>${ov}</span>
+                  </button>`;
+        }).join('')}
+      </div>
+    </div>`;
+  slot.style.display = 'block';
+}
+
+function collapseBranch(qid, val) {
+  const opt = findOption(qid, val);
+  if (!opt || typeof opt !== 'object' || !opt.branch) return;
+  const slot = document.getElementById('branch-' + escapeId(qid + '-' + val));
+  if (slot) { slot.style.display = 'none'; slot.innerHTML = ''; }
+  // clear the branch answer
+  delete answers[opt.branch.id];
+}
+
+function restoreSelections(container) {
+  // Re-mark any previously chosen options (e.g. navigating back)
+  container.querySelectorAll('.mc-option').forEach(btn => {
+    const qid = btn.dataset.qid, val = btn.dataset.val;
+    const a = answers[qid];
+    const chosen = Array.isArray(a) ? a.includes(val) : a === val;
+    if (chosen) {
+      btn.classList.add('selected');
+      btn.querySelector('.check').textContent = '✓';
+      expandBranch(qid, val);
+    }
+  });
+}
+
+// ── COMPLETION CHECK ─────────────────────────────────────────────────────────
+function isQuestionAnswered(q) {
+  const a = answers[q.id];
+  const answered = q.multi ? (Array.isArray(a) && a.length > 0) : !!a;
+  if (!answered) return false;
+  // If a chosen option has a branch, that branch must be answered too
+  const chosenVals = q.multi ? a : [a];
+  for (const val of chosenVals) {
+    const opt = findOption(q.id, val);
+    if (opt && typeof opt === 'object' && opt.branch) {
+      const ba = answers[opt.branch.id];
+      const bAnswered = opt.branch.multi ? (Array.isArray(ba) && ba.length > 0) : !!ba;
+      if (!bAnswered) return false;
+    }
+  }
+  return true;
+}
+
+function checkSection(sectionKey, btnId) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  const complete = SECTIONS[sectionKey].questions.every(isQuestionAnswered);
+  btn.disabled = !complete;
+}
+
+function checkAllSections() {
+  checkSection('enjoy', 's2next');
+  checkSection('workstyle', 's3next');
+  checkSection('matters', 's4next');
+}
+
+// ── NAVIGATION ───────────────────────────────────────────────────────────────
+function goToScreen(n) {
+  if (n === 2) {
+    const name = document.getElementById('name').value.trim();
+    if (!name) { showToast('Please tell us your first name'); return; }
+  }
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen' + n).classList.add('active');
+  const labels = ['', 'Welcome', 'What you enjoy', 'How you work', 'What matters', 'Your compass'];
+  const widths = ['', '20%', '40%', '60%', '80%', '100%'];
+  document.getElementById('stepLabel').textContent = labels[n];
+  document.getElementById('progressBar').style.width = widths[n];
+  window.scrollTo(0, 0);
+
+  if (n === 2) renderSection('enjoy', 'section2Questions', 's2next');
+  if (n === 3) renderSection('workstyle', 'section3Questions', 's3next');
+  if (n === 4) renderSection('matters', 'section4Questions', 's4next');
+}
+
+// ── GENERATE COMPASS ─────────────────────────────────────────────────────────
+let lastResult = null;
+
+function buildAnswerSummary() {
+  const lines = [];
+  for (const sec of Object.values(SECTIONS)) {
+    for (const q of sec.questions) {
+      const a = answers[q.id];
+      if (!a || (Array.isArray(a) && a.length === 0)) continue;
+      const ans = Array.isArray(a) ? a.join(', ') : a;
+      lines.push(`${q.q}\n→ ${ans}`);
+      // include branch answers
+      const chosenVals = Array.isArray(a) ? a : [a];
+      for (const val of chosenVals) {
+        const opt = findOption(q.id, val);
+        if (opt && typeof opt === 'object' && opt.branch) {
+          const ba = answers[opt.branch.id];
+          if (ba && !(Array.isArray(ba) && ba.length === 0)) {
+            const bans = Array.isArray(ba) ? ba.join(', ') : ba;
+            lines.push(`   (more on "${val}") ${opt.branch.q}\n   → ${bans}`);
+          }
+        }
+      }
+    }
+  }
+  return lines.join('\n\n');
+}
+
+async function generateCompass() {
+  goToScreen(5);
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('errorState').style.display = 'none';
+  document.getElementById('resultState').style.display = 'none';
+
+  const name = document.getElementById('name').value.trim();
+  const firstName = name.split(' ')[0];
+  const answerSummary = buildAnswerSummary();
+  const location = (typeof selectedLocation !== 'undefined' && selectedLocation) ? selectedLocation : 'cork';
+  const isCork = location === 'cork';
+
+  const systemPrompt = `You are a sharp, imaginative careers exploration guide helping an Irish Transition Year student (age 15-16) figure out where to do their work experience.
+
+CONTEXT: In Transition Year, students arrange TWO separate work experience placements (about two weeks each) and they approach the places themselves. ${isCork
+    ? 'They are based in Cork, Ireland — which has a strong cluster of pharma and med-tech companies (Stryker, Boston Scientific, Johnson & Johnson, Pfizer, Lilly, Gilead, Abbott and many more), plus food & agri, tech & software, financial services, tourism & hospitality, maritime, and creative sectors.'
+    : 'They are based in Ireland (outside Cork). Keep workplace-type suggestions general and applicable to most parts of Ireland — do not assume a specific local industry cluster.'}
+
+YOUR TWO JOBS:
+1. JOIN THE DOTS — Look at the COMBINATION of their answers and find a specific, non-obvious insight they probably wouldn't reach themselves. Show your reasoning so they get a genuine "oh — that actually makes sense!" moment. Connect 2-3 of their answers explicitly in each suggestion.
+2. OPEN THE APERTURE — Deliberately go beyond the obvious. If someone likes science and helping people, don't just say "doctor or nurse" — open doors to things like prosthetics design, medical device companies, audiology, sports science, biomedical engineering, occupational therapy, public health, forensic science. Most 15-year-olds have never heard of these. TY is the perfect low-stakes time to try something unexpected.
+
+CALIBRATION: Read their "how adventurous" answer. If they want familiar, lean toward recognisable options with one gentle stretch. If they want surprises, prioritise the eye-opening, lesser-known directions. Always include AT LEAST ONE option they'd be unlikely to have thought of themselves.
+
+CRITICAL PRINCIPLES:
+- Suggest a VARIED SPREAD — they need two different placements, so give genuinely different options.
+- Everything must be realistic for a two-week OBSERVATIONAL TY placement a student could actually arrange in Cork. Nothing requiring qualifications they don't have.
+- Frame as doors opening and possibilities to explore — NEVER as verdicts, labels, or "you should be a X".
+- Warm, encouraging, age-appropriate. Never patronising. Never imply academic ability defines them.
+- The student is the expert on themselves; you reveal connections, you don't dictate.
+- ${isCork
+    ? 'For Cork resources, point to genuine places to look (Cork Chamber directory at corkchamber.ie, Local Enterprise Office Cork at localenterprise.ie/cork, named local sectors/company types) and how to search.'
+    : 'For where-to-look guidance, point to general Irish resources (the local Chamber of Commerce, the Local Enterprise Office for their county via localenterprise.ie, relevant national industry bodies) and how to search.'} Do NOT invent specific company contact details.
+
+Respond ONLY with valid JSON, no markdown, no backticks:
+{
+"profile": "2-3 warm sentences reflecting what their combination of answers suggests about them. Address them by first name. An observation that already hints you've spotted a pattern — not a diagnosis.",
+"directions": [
+  {
+    "title": "Type of placement / workplace (specific and appealing)",
+    "about": "1-2 sentences: what this kind of place does and what they'd actually see or do there.",
+    "why": "The JOIN-THE-DOTS reasoning — explicitly connect 2-3 of their specific answers so they see how it fits. This is the eureka moment.",
+    "placement": "1 sentence on what two weeks there might realistically involve for a TY student.",
+    "unexpected": true or false (true if this is a door they probably wouldn't have thought of)
+  }
+],
+"where": [
+  {
+    "area": "Type of workplace to approach in Cork",
+    "how": "Practical guidance on where/how to find and approach these in Cork, referencing a real resource or local sector."
+  }
+],
+"counsellorNote": "A short paragraph (2-3 sentences) the student can show their guidance counsellor — summarising the pattern in their answers and the directions worth exploring, framed as a conversation starter."
+}
+
+Provide 4 directions (with genuine variety, at least one or two marked unexpected:true) and 3-4 where-to-look entries. Make every word specific to THIS student's answers.`;
+
+  const userPrompt = `Transition Year student${isCork ? ' in Cork' : ' in Ireland'}. First name: ${firstName}
+
+Their answers (note the follow-up branches that add detail):
+
+${answerSummary}
+
+Look at the COMBINATION. Join the dots into specific, surprising-but-fitting placement ideas, and deliberately open up at least one or two directions they'd be unlikely to have considered — all realistic to arrange ${isCork ? 'in Cork' : 'locally in Ireland'}. Show your reasoning so each suggestion lands as a genuine insight.`;
+
+  try {
+    let res;
+    try {
+      res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 2000,
+          system: systemPrompt,
+          messages: [{ role: "user", content: userPrompt }]
+        })
+      });
+    } catch (fetchErr) {
+      throw new Error('connection');
+    }
+
+    if (!res.ok) throw new Error('status ' + res.status);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    if (!data.content || !data.content.length) throw new Error('empty');
+
+    const rawText = data.content.map(i => i.text || '').join('');
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('format');
+
+    const result = JSON.parse(jsonMatch[0]);
+    lastResult = { firstName, result, isCork };
+    renderResult(firstName, result);
+
+  } catch (err) {
+    console.error('Generation failed:', err.message);
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorState').style.display = 'block';
+    const msg = err.message === 'connection'
+      ? "We couldn't reach the compass — this usually means a weak internet connection. Please check you're online and try again."
+      : "Something went wrong generating your compass. Please try again in a moment.";
+    document.getElementById('errorMessage').textContent = msg;
+  }
+}
+
+function renderResult(firstName, r) {
+  const whereHeading = (lastResult && lastResult.isCork) ? 'Where to look in Cork' : 'Where to look';
+  const directionsHtml = (r.directions || []).map(d => `
+    <div class="direction${d.unexpected ? ' unexpected' : ''}">
+      ${d.unexpected ? `<div class="unexpected-tag">💡 A door you might not have considered</div>` : ''}
+      <h4>${d.title}</h4>
+      <p>${d.about}</p>
+      <div class="label">How this joins your dots</div>
+      <p>${d.why}</p>
+      <div class="label">What two weeks might involve</div>
+      <p>${d.placement}</p>
+    </div>
+  `).join('');
+
+  const whereHtml = (r.where || []).map(w => `
+    <div class="where-item">
+      <h4>${w.area}</h4>
+      <p>${linkify(w.how)}</p>
+    </div>
+  `).join('');
+
+  document.getElementById('resultCard').innerHTML = `
+    <div class="result-greeting">${firstName}, here's your compass 🧭</div>
+    <p class="result-intro">Based on how your answers fit together, here are some places that might be worth approaching for your two work experience weeks — including one or two you might never have thought of. These aren't conclusions. They're starting points.</p>
+
+    <div class="result-section" style="margin-top:20px;">
+      <h3>What your answers suggest</h3>
+      <p>${r.profile}</p>
+    </div>
+
+    <div class="result-section">
+      <h3>Placements worth exploring</h3>
+      ${directionsHtml}
+    </div>
+
+    <div class="result-section">
+      <h3>${whereHeading}</h3>
+      ${whereHtml}
+    </div>
+
+    <div class="result-section">
+      <h3>A note for your guidance counsellor</h3>
+      <div class="counsellor-note">${r.counsellorNote}</div>
+    </div>
+  `;
+
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('errorState').style.display = 'none';
+  document.getElementById('resultState').style.display = 'block';
+}
+
+function linkify(text) {
+  return text
+    .replace(/(corkchamber\.ie[^\s,)]*)/g, '<a href="https://www.$1" target="_blank" rel="noopener">$1</a>')
+    .replace(/(localenterprise\.ie[^\s,)]*)/g, '<a href="https://www.$1" target="_blank" rel="noopener">$1</a>');
+}
+
+// ── COPY RESULTS ─────────────────────────────────────────────────────────────
+function copyResults() {
+  if (!lastResult) return;
+  const { firstName, result: r } = lastResult;
+  const email = document.getElementById('email').value.trim();
+
+  const lines = [
+    `TY COMPASS — ${firstName}'s Results`,
+    email ? `Email: ${email}` : '',
+    '',
+    'WHAT YOUR ANSWERS SUGGEST',
+    r.profile,
+    '',
+    'PLACEMENTS WORTH EXPLORING',
+    ...(r.directions || []).map(d =>
+      `\n• ${d.title}${d.unexpected ? '  (a door you might not have considered)' : ''}\n  ${d.about}\n  How this joins your dots: ${d.why}\n  What two weeks might involve: ${d.placement}`
+    ),
+    '',
+    (lastResult && lastResult.isCork) ? 'WHERE TO LOOK IN CORK' : 'WHERE TO LOOK',
+    ...(r.where || []).map(w => `\n• ${w.area}\n  ${w.how}`),
+    '',
+    'A NOTE FOR YOUR GUIDANCE COUNSELLOR',
+    r.counsellorNote,
+    '',
+    '———',
+    'This is an AI-generated starting point for exploration — not a career test, and not a prediction of your future. Please talk these ideas through with your guidance counsellor or a trusted adult.',
+    '',
+    'TY Compass — built with care by a parent who wanted to help. 🧭'
+  ].filter(l => l !== '').join('\n');
+
+  navigator.clipboard.writeText(lines).then(() => {
+    showToast('Copied! Paste it into an email to yourself ✅');
+  }).catch(() => showToast('Copy failed — try again'));
+}
+
+// ── START AGAIN ──────────────────────────────────────────────────────────────
+function startAgain() {
+  answers = {};
+  lastResult = null;
+  setLocation('cork');
+  document.getElementById('name').value = '';
+  document.getElementById('email').value = '';
+  goToScreen(1);
+}
+
+// ── TOAST ────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+</script>
+</body>
+</html>
