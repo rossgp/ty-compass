@@ -167,13 +167,16 @@
   <!-- SCREEN 1: WELCOME -->
   <div class="screen active" id="screen1">
     <p class="welcome-text">
-      <strong>TY Compass was created by a parent</strong> who remembered how hard it was to figure out what to do for work experience — and wanted to make that a little easier for every TY student.
+      <strong>TY Compass was created by a parent</strong> to make it easier for a TY student to focus on where to look for work experience.
     </p>
     <p class="welcome-text">
-      In TY you need to line up two separate weeks of work experience — and the hardest part is often just knowing where to start. TY Compass asks you a few questions about what you enjoy and how you like to work, then suggests the kinds of places that might be worth approaching.
+      Lining up two weeks is hard — and with more people working from home, some companies find it harder to support a TY student. Spots are limited.
     </p>
     <p class="welcome-text">
-      It won't pick a career for you — it just points you toward places that might suit you, so you've got somewhere to start. There are no right or wrong answers, and it takes about 5 minutes. 🧭
+      So instead of applying everywhere and hoping, TY Compass looks at what you enjoy and how you like to work, then points you toward a focused group of places worth approaching — ones with a real chance of saying yes. You get a better shot, and you're not taking a spot someone else was set on.
+    </p>
+    <p class="welcome-text">
+      No right or wrong answers, about 5 minutes. 🧭
     </p>
     <div class="form-group">
       <label for="name">Your first name</label>
@@ -276,38 +279,83 @@ const SECTIONS = {
         id: 'enjoy_main', multi: true, max: 3,
         q: "Which of these would you most enjoy spending time on? (pick up to 3)",
         options: [
+          { val: "Helping & caring for others ❤️", branch: {
+            id: 'br_helping', multi: true, max: 2,
+            q: "Who would you most like to help? (pick up to 2)",
+            options: ["Young children 🧒", "Teenagers my own age 🧑", "Older or elderly people 👵", "People with disabilities ♿", "People going through hard times 🫂", "Anyone who needs it 😊"]
+          }},
           { val: "Working with people 👥", branch: {
-            id: 'enjoy_people_who', multi: true, max: 2,
+            id: 'br_people', multi: true, max: 2,
             q: "Who would you most like to work with? (pick up to 2)",
             options: ["Young children 🧒", "Teenagers my own age 🧑", "Older or elderly people 👵", "People who need extra help ♿", "Customers or the public 🛍️", "Anyone, I just like people 😊"]
           }},
+          { val: "Health & wellbeing 🧘", branch: {
+            id: 'br_health', multi: true, max: 2,
+            q: "Which area interests you most? (pick up to 2)",
+            options: ["Physical health & medicine 🩺", "Mental health & support 💚", "Fitness & sport 🏋️", "Nutrition & food 🥗", "Caring & therapy 🤲"]
+          }},
+          { val: "Education & academia 📚", branch: {
+            id: 'br_education', multi: true, max: 2,
+            q: "What setting appeals most? (pick up to 2)",
+            options: ["Young children 🧒", "Primary-age kids ✏️", "Teenagers 🧑", "Coaching & tutoring 📖", "Research & study 🔬"]
+          }},
           { val: "Making or building things 🔨", branch: {
-            id: 'enjoy_make_what', multi: true, max: 2,
+            id: 'br_making', multi: true, max: 2,
             q: "What kind of making appeals most? (pick up to 2)",
-            options: ["With my hands, physically 🔧", "On a computer 💻", "Artistic or design pieces 🎨", "Food or baking 🍳", "Big things — structures, machines 🏗️"]
+            options: ["With my hands, physically 🔧", "On a computer 💻", "Artistic or design pieces 🎨", "Food or baking 🍳", "Buildings, structures & construction 🏗️"]
+          }},
+          { val: "Science & discovery 🔬", branch: {
+            id: 'br_science', multi: true, max: 2,
+            q: "Which area of science? (pick up to 2)",
+            options: ["The human body & health 🫀", "Nature & environment 🌿", "Chemistry & materials ⚗️", "Physics & space 🔭", "Data & experiments 📊"]
           }},
           { val: "Figuring out how things work 🔍", branch: {
-            id: 'enjoy_figure_what', multi: true, max: 2,
+            id: 'br_figure', multi: true, max: 2,
             q: "What kind of things? (pick up to 2)",
-            options: ["Machines & technology ⚙️", "The human body & health 🫀", "Nature & the environment 🌿", "Money & how business works 💶", "Computers & code 💻"]
+            options: ["Machines & technology ⚙️", "The body & health 🫀", "Nature & environment 🌿", "Buildings, architecture & construction 🏗️", "Business & money 💶", "Computers & code 💻"]
           }},
           { val: "Being creative 🎨", branch: {
-            id: 'enjoy_creative_how', multi: true, max: 2,
+            id: 'br_creative', multi: true, max: 2,
             q: "What kind of creative? (pick up to 2)",
             options: ["Visual art & design 🖌️", "Writing & storytelling ✍️", "Music & performance 🎵", "Video, photography & content 📱", "Fashion & style 👗"]
           }},
+          { val: "Business & enterprise 💼", branch: {
+            id: 'br_business', multi: true, max: 2,
+            q: "What appeals most? (pick up to 2)",
+            options: ["Running & managing things 🧭", "Selling & customers 🛍️", "Money & finance 💶", "Starting something new 🚀", "Marketing & ideas 💡"]
+          }},
+          { val: "Food & hospitality 🍳", branch: {
+            id: 'br_food', multi: true, max: 2,
+            q: "What part appeals most? (pick up to 2)",
+            options: ["Cooking & baking 👨‍🍳", "Cafés & restaurants ☕", "Hotels & events 🏨", "Nutrition & healthy food 🥗"]
+          }},
+          { val: "Media & communication 🎤", branch: {
+            id: 'br_media', multi: true, max: 2,
+            q: "What kind? (pick up to 2)",
+            options: ["Journalism & writing ✍️", "Social media & marketing 📱", "TV, film & radio 🎬", "PR & events 🎤"]
+          }},
+          { val: "Law, justice & society ⚖️", branch: {
+            id: 'br_law', multi: true, max: 2,
+            q: "What draws you? (pick up to 2)",
+            options: ["Law & courts ⚖️", "Politics & change 🗳️", "Helping & advocacy 🤝", "Public service 🏛️"]
+          }},
           { val: "Being active or outdoors 🏃", branch: {
-            id: 'enjoy_active_how', multi: true, max: 2,
+            id: 'br_active', multi: true, max: 2,
             q: "What kind of active? (pick up to 2)",
-            options: ["Sport & fitness ⚽", "Working with animals 🐾", "Nature & conservation 🌲", "Hands-on trades & building 🛠️", "On the move, different places 🚐"]
+            options: ["Sport & fitness ⚽", "Animals 🐾", "Nature & conservation 🌲", "Hands-on trades & building 🛠️", "On the move, different places 🚐"]
+          }},
+          { val: "Animals & nature 🐾", branch: {
+            id: 'br_animals', multi: true, max: 2,
+            q: "What appeals most? (pick up to 2)",
+            options: ["Working with animals 🐕", "Vet & animal care 🩺", "Conservation & wildlife 🦋", "Farming & land 🚜"]
           }},
           { val: "Solving problems 🧩", branch: {
-            id: 'enjoy_solve_what', multi: true, max: 2,
+            id: 'br_solve', multi: true, max: 2,
             q: "What kind of problems do you like? (pick up to 2)",
             options: ["Logical & technical 🔢", "Helping-people problems ❤️", "Creative challenges 💡", "Practical, hands-on fixes 🔧", "Business & money puzzles 📊"]
           }},
           { val: "Organising & planning 📋", branch: {
-            id: 'enjoy_organise_what', multi: false,
+            id: 'br_organise', multi: false,
             q: "What do you most like to organise?",
             options: ["Events & people 🎉", "Information & systems 🗂️", "Projects & tasks ✅", "Spaces & how things look 🏠"]
           }},
@@ -362,6 +410,7 @@ const SECTIONS = {
           { val: "I helped someone ❤️" },
           { val: "I made or fixed something real 🔨" },
           { val: "I cracked something difficult 🧠" },
+          { val: "I came up with great ideas 💡" },
           { val: "I created something people enjoy 🎨" },
           { val: "I kept things running smoothly ⚙️" }
         ]},
@@ -629,7 +678,9 @@ CALIBRATION: Read their "how adventurous" answer. If they want familiar, lean to
 
 CRITICAL PRINCIPLES:
 - Suggest a VARIED SPREAD — they need two different placements, so give genuinely different options.
-- Everything must be realistic for a two-week OBSERVATIONAL TY placement a student could actually arrange in Cork. Nothing requiring qualifications they don't have.
+- Everything must be realistic for a two-week OBSERVATIONAL TY placement a student could actually arrange. Nothing requiring qualifications they don't have.
+- FAVOUR PLACES THAT CAN REALISTICALLY HOST A STUDENT. With more people working from home, desk-only office roles are often done remotely and can't support a TY student well. Lean toward workplaces with a genuine physical presence and something to see or do on-site — workshops, labs, clinics, kitchens, retail, vets, sites, studios, gyms, salons, garages, pharmacies, hotels, community services, etc. Avoid suggesting placements likely to be empty-office or remote-only.
+- HELP THEM APPROACH IN A FOCUSED WAY. The whole point is that they approach a small, well-matched set of places where they're genuinely interested — not scattergun-applying everywhere. Frame suggestions so the student can see WHY each place fits them, which helps them approach with genuine interest and gives them a better chance of a yes.
 - Frame as doors opening and possibilities to explore — NEVER as verdicts, labels, or "you should be a X".
 - Warm, encouraging, age-appropriate. Never patronising. Never imply academic ability defines them.
 - The student is the expert on themselves; you reveal connections, you don't dictate.
